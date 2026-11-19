@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ماشین‌حساب سود و زیان معامله</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-page: #f4f6f9;
+      --bg-card: #ffffff;
+      --bg-subtle: #f8fafc;
+      --bg-input: #ffffff;
+      --bg-pill: #f1f5f9;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --border-focus: #3b82f6;
+      --shadow-card: 0 20px 50px -12px rgba(15, 23, 42, 0.08);
+      --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+      --accent: #2563eb;
+      --accent-soft: rgba(37, 99, 235, 0.1);
+      --profit: #10b981;
+      --profit-bg: rgba(16, 185, 129, 0.12);
+      --loss: #ef4444;
+      --loss-bg: rgba(239, 68, 68, 0.12);
+      --neutral: #64748b;
+      --neutral-bg: rgba(100, 116, 139, 0.12);
+      --transition-speed: 0.3s;
+    }
+
+    [data-theme="dark"] {
+      --bg-page: #0b0f17;
+      --bg-card: #111827;
+      --bg-subtle: #161f30;
+      --bg-input: #0f172a;
+      --bg-pill: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #1e293b;
+      --border-focus: #60a5fa;
+      --shadow-card: 0 24px 60px -15px rgba(0, 0, 0, 0.55);
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.25);
+      --accent: #3b82f6;
+      --accent-soft: rgba(59, 130, 246, 0.16);
+      --profit: #34d399;
+      --profit-bg: rgba(52, 211, 153, 0.14);
+      --loss: #f87171;
+      --loss-bg: rgba(248, 113, 113, 0.15);
+      --neutral: #94a3b8;
+      --neutral-bg: rgba(148, 163, 184, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 28px 16px 40px;
+      transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      animation: fadeSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+      padding: 0 4px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge-reusable {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--profit-bg);
+      color: var(--profit);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .badge-reusable .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--profit);
+      animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.4); opacity: 0.6; }
+    }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.22s ease;
+      user-select: none;
+    }
+
+    .pill-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--border-focus);
+    }
+
+    .pill-btn:active {
+      transform: scale(0.97);
+    }
+
+    .pill-btn.active-option {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .theme-icon {
+      display: inline-flex;
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    [data-theme="dark"] .theme-icon {
+      transform: rotate(360deg);
+    }
+
+    .calculator-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 26px;
+      box-shadow: var(--shadow-card);
+      transition: background-color var(--transition-speed) ease,
+                  border-color var(--transition-speed) ease,
+                  box-shadow var(--transition-speed) ease;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 22px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+
+    .save-indicator {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .save-indicator.visible {
+      opacity: 1;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 540px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .calculator-card { padding: 20px 16px; border-radius: 20px; }
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+    }
+
+    .input-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1.5px solid var(--border-color);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-family: inherit;
+      font-size: 0.98rem;
+      font-weight: 600;
+      outline: none;
+      direction: ltr;
+      text-align: right;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease,
+                  background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+    }
+
+    input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.45;
+      font-weight: 500;
+    }
+
+    input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    /* Live price fetch bar */
+    .live-price-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .fetch-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .target-select {
+      background: var(--bg-input);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 600;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .fetch-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .fetch-btn:hover:not(:disabled) {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .fetch-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      width: 13px;
+      height: 13px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .fetch-btn.loading .spinner {
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .price-status {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      min-height: 18px;
+    }
+
+    .price-status.success {
+      color: var(--profit);
+      font-weight: 600;
+    }
+
+    .price-status.info {
+      color: var(--text-muted);
+    }
+
+    .stepper-controls {
+      position: absolute;
+      left: 6px;
+      display: none;
+      align-items: center;
+      gap: 4px;
+      z-index: 2;
+    }
+
+    body.show-steppers .stepper-controls {
+      display: flex;
+    }
+
+    body.show-steppers .num-input {
+      padding-left: 68px;
+    }
+
+    .step-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-pill);
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+
+    .step-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .helper-text {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .side-switch {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-pill);
+      padding: 4px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      user-select: none;
+    }
+
+    .side-thumb {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      right: 4px;
+      width: calc(50% - 4px);
+      border-radius: 11px;
+      background: var(--bg-card);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      transition: transform 0.35s cubic-bezier(0.34, 1.45, 0.64, 1),
+                  background-color var(--transition-speed) ease;
+      z-index: 1;
+    }
+
+    .side-switch[data-side="short"] .side-thumb {
+      transform: translateX(-100%);
+    }
+
+    .side-btn {
+      position: relative;
+      z-index: 2;
+      background: transparent;
+      border: none;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-radius: 11px;
+      transition: color 0.22s ease;
+    }
+
+    .side-btn.active[data-value="long"] { color: var(--profit); }
+    .side-btn.active[data-value="short"] { color: var(--loss); }
+
+    .result-box {
+      margin-top: 22px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 20px;
+      transition: background-color var(--transition-speed) ease,
+                  border-color var(--transition-speed) ease;
+    }
+
+    .result-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .result-pair-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .status-badge.profit { background: var(--profit-bg); color: var(--profit); }
+    .status-badge.loss { background: var(--loss-bg); color: var(--loss); }
+    .status-badge.neutral { background: var(--neutral-bg); color: var(--neutral); }
+
+    .result-main-numbers {
+      text-align: left;
+      direction: ltr;
+    }
+
+    .pnl-percent {
+      font-size: 1.55rem;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+
+    .pnl-dollar {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .pop-anim {
+      animation: numPop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes numPop {
+      0% { transform: scale(0.95); }
+      60% { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
+    .text-profit { color: var(--profit); }
+    .text-loss { color: var(--loss); }
+    .text-neutral { color: var(--neutral); }
+
+    .breakdown-list {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
+    }
+
+    .breakdown-label {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .breakdown-value {
+      font-weight: 700;
+      direction: ltr;
+      text-align: left;
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border-color);
+      margin: 4px 0;
+    }
+
+    .reset-btn {
+      width: 100%;
+      margin-top: 18px;
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1.5px solid var(--border-color);
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.22s ease;
+    }
+
+    .reset-btn:hover {
+      background: var(--loss-bg);
+      border-color: var(--loss);
+      color: var(--loss);
+    }
+
+    .reset-btn:active {
+      transform: scale(0.985);
+    }
+
+    .disclaimer {
+      margin-top: 14px;
+      font-size: 0.76rem;
+      line-height: 1.7;
+      color: var(--text-muted);
+      text-align: justify;
+    }
+
+    .app-footer {
+      margin-top: 22px;
+      text-align: center;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+      padding: 10px;
+    }
+
+    .app-footer strong {
+      color: var(--text-main);
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <span class="badge-reusable">
+        <span class="dot"></span>
+        قابل استفاده مجدد
+      </span>
+
+      <div class="top-actions">
+        <button type="button" class="pill-btn" id="stepperToggle">
+          <span>دکمه‌های +/-</span>
+        </button>
+
+        <button type="button" class="pill-btn" id="themeToggle" aria-label="تغییر تم">
+          <span class="theme-icon" id="themeIcon">🌙</span>
+          <span id="themeLabel">دارک مود</span>
+        </button>
+      </div>
+    </div>
+
+    <main class="calculator-card">
+      <div class="card-header">
+        <h1 class="card-title">ماشین‌حساب سود و زیان معامله</h1>
+        <span class="save-indicator" id="saveIndicator">ذخیره شد ✓</span>
+      </div>
+
+      <div class="form-group">
+        <label for="pairName">نام ارز یا جفت‌ارز</label>
+        <div class="input-box">
+          <input type="text" id="pairName" value="" placeholder="مثلاً BTC/USDT یا SOL یا TON" autocomplete="off" />
+        </div>
+        <div class="live-price-row">
+          <span class="price-status" id="priceStatus"></span>
+          <div class="fetch-controls">
+            <select class="target-select" id="priceTarget" title="قیمت لحظه‌ای در کدام فیلد قرار بگیرد؟">
+              <option value="entry">در قیمت ورود</option>
+              <option value="exit">در قیمت خروج</option>
+              <option value="both">در هر دو (ورود و خروج)</option>
+            </select>
+            <button type="button" class="fetch-btn" id="fetchPriceBtn">
+              <span class="spinner"></span>
+              <span>دریافت قیمت لحظه‌ای</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>جهت معامله</label>
+        <div class="side-switch" id="sideSwitch" data-side="long">
+          <div class="side-thumb"></div>
+          <button type="button" class="side-btn active" data-value="long">لانگ (خرید)</button>
+          <button type="button" class="side-btn" data-value="short">شورت (فروش)</button>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="entryPrice">قیمت ورود</label>
+          <div class="input-box">
+            <input type="text" inputmode="decimal" class="num-input" id="entryPrice" value="" placeholder="0" autocomplete="off" />
+            <div class="stepper-controls">
+              <button type="button" class="step-btn" data-target="entryPrice" data-step="1">+</button>
+              <button type="button" class="step-btn" data-target="entryPrice" data-step="-1">−</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="exitPrice">قیمت خروج</label>
+          <div class="input-box">
+            <input type="text" inputmode="decimal" class="num-input" id="exitPrice" value="" placeholder="0" autocomplete="off" />
+            <div class="stepper-controls">
+              <button type="button" class="step-btn" data-target="exitPrice" data-step="1">+</button>
+              <button type="button" class="step-btn" data-target="exitPrice" data-step="-1">−</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label for="margin">سرمایه (دلار)</label>
+          <div class="input-box">
+            <input type="text" inputmode="decimal" class="num-input" id="margin" value="" placeholder="0" autocomplete="off" />
+            <div class="stepper-controls">
+              <button type="button" class="step-btn" data-target="margin" data-step="10">+</button>
+              <button type="button" class="step-btn" data-target="margin" data-step="-10">−</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="leverage">لوریج (اهرم)</label>
+          <div class="input-box">
+            <input type="text" inputmode="decimal" class="num-input" id="leverage" value="" placeholder="0" autocomplete="off" />
+            <div class="stepper-controls">
+              <button type="button" class="step-btn" data-target="leverage" data-step="1">+</button>
+              <button type="button" class="step-btn" data-target="leverage" data-step="-1">−</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="feePercent">کارمزد هر طرف معامله (درصد، اختیاری)</label>
+        <div class="input-box">
+          <input type="text" inputmode="decimal" class="num-input" id="feePercent" value="" placeholder="0" autocomplete="off" />
+          <div class="stepper-controls">
+            <button type="button" class="step-btn" data-target="feePercent" data-step="0.1">+</button>
+            <button type="button" class="step-btn" data-target="feePercent" data-step="-0.1">−</button>
+          </div>
+        </div>
+        <p class="helper-text">اگر نمی‌خواهی کارمزد محاسبه شود، صفر بگذار یا خالی رها کن.</p>
+      </div>
+
+      <section class="result-box" id="resultBox">
+        <div class="result-top">
+          <div>
+            <div class="result-pair-label" id="resultPairTitle">نتیجه معامله</div>
+            <span class="status-badge neutral" id="statusBadge">بدون تغییر</span>
+          </div>
+
+          <div class="result-main-numbers">
+            <div class="pnl-percent text-neutral" id="netPnlPercent">0.00%</div>
+            <div class="pnl-dollar text-neutral" id="netPnlDollar">0.00 دلار</div>
+          </div>
+        </div>
+
+        <div class="breakdown-list">
+          <div class="breakdown-row">
+            <span class="breakdown-label">درصد تغییر قیمت</span>
+            <span class="breakdown-value" id="priceChangePercent">0.00%</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-label">بازده با لوریج، قبل از کارمزد</span>
+            <span class="breakdown-value" id="grossRoePercent">0.00%</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-label">سود/ضرر قبل از کارمزد</span>
+            <span class="breakdown-value" id="grossPnlDollar">0.00 دلار</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-label">کارمزد تخمینی ورود و خروج</span>
+            <span class="breakdown-value" id="totalFeeDollar">0.00 دلار</span>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="breakdown-row">
+            <span class="breakdown-label">سرمایه اولیه</span>
+            <span class="breakdown-value" id="initialMarginText">0.00 دلار</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-label">سرمایه نهایی تخمینی</span>
+            <span class="breakdown-value" id="finalMarginText">0.00 دلار</span>
+          </div>
+        </div>
+      </section>
+
+      <button type="button" class="reset-btn" id="resetBtn">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+        بازنشانی اعداد (صفر کردن همه)
+      </button>
+
+      <p class="disclaimer">
+        محاسبه بر اساس فرض مارجین ایزوله و اندازه موقعیت برابر با سرمایه × لوریج است. کارمزد با نرخ یکسان برای ورود و خروج تخمین زده می‌شود. فاندینگ، اسلیپیج و قیمت لیکویید شدن محاسبه نمی‌شوند. دریافت قیمت لحظه‌ای در صورت در دسترس بودن APIهای عمومی انجام می‌شود و در صورت محدودیت شبکه می‌توانید قیمت را دستی وارد کنید.
+      </p>
+    </main>
+
+    <footer class="app-footer">
+      طراح و برنامه‌نویس: <strong>محمد متین صادقی پور</strong>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const STORAGE_KEY = 'pnl_calc_github_v1';
+      const THEME_KEY = 'pnl_calc_theme_v1';
+      const STEPPER_KEY = 'pnl_calc_steppers_v1';
+
+      const $ = (id) => document.getElementById(id);
+
+      const elements = {
+        html: document.documentElement,
+        body: document.body,
+        themeToggle: $('themeToggle'),
+        themeIcon: $('themeIcon'),
+        themeLabel: $('themeLabel'),
+        stepperToggle: $('stepperToggle'),
+        saveIndicator: $('saveIndicator'),
+        pairName: $('pairName'),
+        priceTarget: $('priceTarget'),
+        fetchPriceBtn: $('fetchPriceBtn'),
+        priceStatus: $('priceStatus'),
+        sideSwitch: $('sideSwitch'),
+        sideBtns: document.querySelectorAll('.side-btn'),
+        entryPrice: $('entryPrice'),
+        exitPrice: $('exitPrice'),
+        margin: $('margin'),
+        leverage: $('leverage'),
+        feePercent: $('feePercent'),
+        resultPairTitle: $('resultPairTitle'),
+        statusBadge: $('statusBadge'),
+        netPnlPercent: $('netPnlPercent'),
+        netPnlDollar: $('netPnlDollar'),
+        priceChangePercent: $('priceChangePercent'),
+        grossRoePercent: $('grossRoePercent'),
+        grossPnlDollar: $('grossPnlDollar'),
+        totalFeeDollar: $('totalFeeDollar'),
+        initialMarginText: $('initialMarginText'),
+        finalMarginText: $('finalMarginText'),
+        resetBtn: $('resetBtn')
+      };
+
+      let currentSide = 'long';
+      let saveTimer = null;
+
+      const COINGECKO_MAP = {
+        BTC: 'bitcoin',
+        ETH: 'ethereum',
+        SOL: 'solana',
+        BNB: 'binancecoin',
+        TON: 'the-open-network',
+        XRP: 'ripple',
+        ADA: 'cardano',
+        DOGE: 'dogecoin',
+        AVAX: 'avalanche-2',
+        LINK: 'chainlink',
+        DOT: 'polkadot',
+        TRX: 'tron',
+        LTC: 'litecoin',
+        NEAR: 'near',
+        SUI: 'sui',
+        PEPE: 'pepe'
+      };
+
+      function safeGet(key) {
+        try { return localStorage.getItem(key); } catch { return null; }
+      }
+
+      function safeSet(key, val) {
+        try { localStorage.setItem(key, val); } catch {}
+      }
+
+      function safeRemove(key) {
+        try { localStorage.removeItem(key); } catch {}
+      }
+
+      function normalizeDecimalString(str) {
+        if (!str) return '';
+        const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+        const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
+        let out = '';
+        let hasDot = false;
+
+        for (let i = 0; i < str.length; i++) {
+          const ch = str[i];
+          const pIdx = persianDigits.indexOf(ch);
+          const aIdx = arabicDigits.indexOf(ch);
+          if (pIdx !== -1) {
+            out += pIdx;
+          } else if (aIdx !== -1) {
+            out += aIdx;
+          } else if (ch >= '0' && ch <= '9') {
+            out += ch;
+          } else if ((ch === '.' || ch === '٫' || ch === '/') && !hasDot) {
+            out += '.';
+            hasDot = true;
+          }
+        }
+        return out;
+      }
+
+      function parseNum(val) {
+        const cleaned = normalizeDecimalString(val);
+        const n = parseFloat(cleaned);
+        return Number.isFinite(n) ? n : 0;
+      }
+
+      function setTheme(theme) {
+        const isDark = theme === 'dark';
+        elements.html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        elements.themeIcon.textContent = isDark ? '☀️' : '🌙';
+        elements.themeLabel.textContent = isDark ? 'لایت مود' : 'دارک مود';
+        safeSet(THEME_KEY, isDark ? 'dark' : 'light');
+      }
+
+      function setSteppersVisible(visible) {
+        elements.body.classList.toggle('show-steppers', visible);
+        elements.stepperToggle.classList.toggle('active-option', visible);
+        safeSet(STEPPER_KEY, visible ? '1' : '0');
+      }
+
+      function setSide(side) {
+        currentSide = side === 'short' ? 'short' : 'long';
+        elements.sideSwitch.setAttribute('data-side', currentSide);
+        elements.sideBtns.forEach((b) => {
+          b.classList.toggle('active', b.dataset.value === currentSide);
+        });
+      }
+
+      function showSaved() {
+        elements.saveIndicator.classList.add('visible');
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          elements.saveIndicator.classList.remove('visible');
+        }, 1100);
+      }
+
+      function saveState() {
+        const payload = {
+          side: currentSide,
+          pairName: elements.pairName.value,
+          priceTarget: elements.priceTarget.value,
+          entryPrice: elements.entryPrice.value,
+          exitPrice: elements.exitPrice.value,
+          margin: elements.margin.value,
+          leverage: elements.leverage.value,
+          feePercent: elements.feePercent.value
+        };
+        safeSet(STORAGE_KEY, JSON.stringify(payload));
+        showSaved();
+      }
+
+      function loadState() {
+        const raw = safeGet(STORAGE_KEY);
+        if (!raw) return;
+        try {
+          const s = JSON.parse(raw);
+          setSide(s.side || 'long');
+          elements.pairName.value = s.pairName || '';
+          if (s.priceTarget) elements.priceTarget.value = s.priceTarget;
+          elements.entryPrice.value = s.entryPrice || '';
+          elements.exitPrice.value = s.exitPrice || '';
+          elements.margin.value = s.margin || '';
+          elements.leverage.value = s.leverage || '';
+          elements.feePercent.value = s.feePercent || '';
+        } catch {}
+      }
+
+      function setPriceStatus(msg, type = '') {
+        elements.priceStatus.textContent = msg;
+        elements.priceStatus.className = `price-status ${type}`.trim();
+      }
+
+      async function fetchJson(url, timeoutMs = 4000) {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+        try {
+          const res = await fetch(url, { signal: ctrl.signal });
+          if (!res.ok) return null;
+          return await res.json();
+        } catch {
+          return null;
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      function parseBaseSymbol(raw) {
+        const clean = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (!clean) return null;
+        return clean.replace(/(USDT|USDC|BUSD|USD|IRT)$/, '') || clean;
+      }
+
+      async function fetchCoinPrice(base) {
+        // 1. CoinCap
+        const capData = await fetchJson(`https://api.coincap.io/v2/assets/${encodeURIComponent(base.toLowerCase())}`);
+        if (capData && capData.data && parseFloat(capData.data.priceUsd) > 0) {
+          return { price: parseFloat(capData.data.priceUsd), source: 'CoinCap' };
+        }
+
+        // 2. CoinGecko
+        const cgId = COINGECKO_MAP[base];
+        if (cgId) {
+          const cgData = await fetchJson(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(cgId)}&vs_currencies=usd`);
+          const p = cgData && cgData[cgId] ? parseFloat(cgData[cgId].usd) : 0;
+          if (p > 0) return { price: p, source: 'CoinGecko' };
+        }
+
+        // 3. Binance
+        const binData = await fetchJson(`https://api.binance.com/api/v3/ticker/price?symbol=${encodeURIComponent(base + 'USDT')}`);
+        if (binData && parseFloat(binData.price) > 0) {
+          return { price: parseFloat(binData.price), source: 'Binance' };
+        }
+
+        return null;
+      }
+
+      function formatPriceValue(price) {
+        if (price >= 100) return String(+price.toFixed(2));
+        if (price >= 1) return String(+price.toFixed(4));
+        return String(+price.toFixed(6));
+      }
+
+      elements.fetchPriceBtn.addEventListener('click', async () => {
+        const raw = elements.pairName.value.trim();
+        const base = parseBaseSymbol(raw);
+        if (!base) {
+          setPriceStatus('ابتدا نام کوین را بنویس (مثلاً BTC یا SOL یا TON).', 'info');
+          return;
+        }
+
+        elements.fetchPriceBtn.classList.add('loading');
+        elements.fetchPriceBtn.disabled = true;
+        setPriceStatus(`در حال بررسی قیمت ${base}...`, 'info');
+
+        const res = await fetchCoinPrice(base);
+
+        elements.fetchPriceBtn.classList.remove('loading');
+        elements.fetchPriceBtn.disabled = false;
+
+        if (!res) {
+          setPriceStatus('در این شبکه امکان دریافت خودکار نبود؛ قیمت را دستی وارد کن.', 'info');
+          return;
+        }
+
+        const formatted = formatPriceValue(res.price);
+        const target = elements.priceTarget.value;
+        if (target === 'entry' || target === 'both') elements.entryPrice.value = formatted;
+        if (target === 'exit' || target === 'both') elements.exitPrice.value = formatted;
+
+        setPriceStatus(`${base}: ${formatted} دلار (${res.source})`, 'success');
+        saveState();
+        calculatePnL(true);
+      });
+
+      function formatSignedNumber(num, decimals = 2) {
+        if (!Number.isFinite(num) || Math.abs(num) < Math.pow(10, -decimals) / 2) {
+          return (0).toFixed(decimals);
+        }
+        const absVal = Math.abs(num).toFixed(decimals);
+        return num > 0 ? `+${absVal}` : `-${absVal}`;
+      }
+
+      function triggerPop(el) {
+        el.classList.remove('pop-anim');
+        void el.offsetWidth;
+        el.classList.add('pop-anim');
+      }
+
+      function calculatePnL(animate = false) {
+        const pair = elements.pairName.value.trim();
+        const entry = Math.max(0, parseNum(elements.entryPrice.value));
+        const exit = Math.max(0, parseNum(elements.exitPrice.value));
+        const margin = Math.max(0, parseNum(elements.margin.value));
+        const leverage = Math.max(0, parseNum(elements.leverage.value));
+        const feeRate = Math.max(0, parseNum(elements.feePercent.value) / 100);
+
+        elements.resultPairTitle.textContent = pair ? `نتیجه معامله ${pair}` : 'نتیجه معامله';
+
+        let priceChangePct = 0;
+        let directionalPct = 0;
+
+        if (entry > 0 && exit > 0) {
+          priceChangePct = ((exit - entry) / entry) * 100;
+          directionalPct = currentSide === 'long' ? priceChangePct : -priceChangePct;
+        }
+
+        const grossRoePct = directionalPct * leverage;
+        const grossPnl = margin * (grossRoePct / 100);
+
+        const positionSize = margin * leverage;
+        const exitPositionSize = (entry > 0 && exit > 0) ? positionSize * (exit / entry) : positionSize;
+        const entryFee = positionSize * feeRate;
+        const exitFee = (exit > 0 ? exitPositionSize : 0) * feeRate;
+        const totalFee = entryFee + exitFee;
+
+        const netPnl = grossPnl - totalFee;
+        const netRoePct = margin > 0 ? (netPnl / margin) * 100 : 0;
+        const finalMargin = margin > 0 ? Math.max(0, margin + netPnl) : 0;
+
+        let toneClass = 'text-neutral';
+        let badgeClass = 'neutral';
+        let badgeText = 'بدون تغییر';
+
+        if (netPnl > 0.0001) {
+          toneClass = 'text-profit';
+          badgeClass = 'profit';
+          badgeText = 'سود خالص';
+        } else if (netPnl < -0.0001) {
+          toneClass = 'text-loss';
+          badgeClass = 'loss';
+          badgeText = 'ضرر خالص';
+        } else if (margin > 0 && entry > 0 && exit > 0) {
+          badgeText = 'سر به سر';
+        }
+
+        elements.statusBadge.className = `status-badge ${badgeClass}`;
+        elements.statusBadge.textContent = badgeText;
+
+        elements.netPnlPercent.className = `pnl-percent ${toneClass}`;
+        elements.netPnlDollar.className = `pnl-dollar ${toneClass}`;
+
+        elements.netPnlPercent.textContent = `${formatSignedNumber(netRoePct, 2)}%`;
+        elements.netPnlDollar.textContent = `${formatSignedNumber(netPnl, 2)} دلار`;
+
+        elements.priceChangePercent.textContent = `${formatSignedNumber(priceChangePct, 2)}%`;
+        elements.grossRoePercent.textContent = `${formatSignedNumber(grossRoePct, 2)}%`;
+        elements.grossPnlDollar.textContent = `${formatSignedNumber(grossPnl, 2)} دلار`;
+        elements.totalFeeDollar.textContent = `${Math.abs(totalFee).toFixed(2)} دلار`;
+        elements.initialMarginText.textContent = `${margin.toFixed(2)} دلار`;
+        elements.finalMarginText.textContent = `${finalMargin.toFixed(2)} دلار`;
+
+        if (animate) {
+          triggerPop(elements.netPnlPercent);
+          triggerPop(elements.netPnlDollar);
+        }
+      }
+
+      elements.themeToggle.addEventListener('click', () => {
+        setTheme(elements.html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
+
+      elements.stepperToggle.addEventListener('click', () => {
+        setSteppersVisible(!elements.body.classList.contains('show-steppers'));
+      });
+
+      document.querySelectorAll('.step-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const input = $(btn.dataset.target);
+          if (!input) return;
+          const step = parseFloat(btn.dataset.step);
+          const nextVal = Math.max(0, +(parseNum(input.value) + step).toFixed(6));
+          input.value = nextVal === 0 ? '' : String(nextVal);
+          saveState();
+          calculatePnL(true);
+        });
+      });
+
+      elements.sideBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          setSide(btn.dataset.value);
+          saveState();
+          calculatePnL(true);
+        });
+      });
+
+      document.querySelectorAll('.num-input').forEach((input) => {
+        input.addEventListener('input', () => {
+          const cleaned = normalizeDecimalString(input.value);
+          if (input.value !== cleaned) input.value = cleaned;
+          saveState();
+          calculatePnL(true);
+        });
+      });
+
+      elements.pairName.addEventListener('input', () => {
+        saveState();
+        calculatePnL(false);
+      });
+
+      elements.priceTarget.addEventListener('change', saveState);
+
+      elements.resetBtn.addEventListener('click', () => {
+        elements.pairName.value = '';
+        setSide('long');
+        elements.entryPrice.value = '';
+        elements.exitPrice.value = '';
+        elements.margin.value = '';
+        elements.leverage.value = '';
+        elements.feePercent.value = '';
+        setPriceStatus('', '');
+        safeRemove(STORAGE_KEY);
+        calculatePnL(true);
+      });
+
+      const savedTheme = safeGet(THEME_KEY);
+      if (savedTheme === 'dark' || savedTheme === 'light') setTheme(savedTheme);
+      if (safeGet(STEPPER_KEY) === '1') setSteppersVisible(true);
+      loadState();
+      calculatePnL(false);
+    })();
+  </script>
+</body>
+</html>
