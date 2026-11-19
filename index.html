@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ماشین‌حساب سود و زیان معامله</title>
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#2563eb" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="apple-touch-icon" href="./icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -575,6 +580,22 @@
       transform: scale(0.985);
     }
 
+    .install-guide {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-color);
+      font-size: 0.78rem;
+      line-height: 1.75;
+      color: var(--text-muted);
+      display: none;
+    }
+
+    .install-guide.open {
+      display: block;
+    }
+
     .disclaimer {
       margin-top: 14px;
       font-size: 0.76rem;
@@ -606,6 +627,10 @@
       </span>
 
       <div class="top-actions">
+        <button type="button" class="pill-btn" id="installGuideBtn">
+          <span>نصب روی گوشی</span>
+        </button>
+
         <button type="button" class="pill-btn" id="stepperToggle">
           <span>دکمه‌های +/-</span>
         </button>
@@ -615,6 +640,12 @@
           <span id="themeLabel">دارک مود</span>
         </button>
       </div>
+    </div>
+
+    <div class="install-guide" id="installGuide">
+      <strong>نصب به عنوان اپلیکیشن روی اندروید و آی‌او‌اس:</strong><br />
+      • <strong>اندروید (Chrome):</strong> منوی سه‌نقطه بالا را بزنید و گزینه <strong>Install app</strong> یا <strong>Add to Home screen</strong> را انتخاب کنید.<br />
+      • <strong>آی‌او‌اس (Safari):</strong> در مرورگر Safari دکمه <strong>Share</strong> را بزنید و گزینه <strong>Add to Home Screen</strong> را انتخاب کنید.
     </div>
 
     <main class="calculator-card">
@@ -786,6 +817,8 @@
       const elements = {
         html: document.documentElement,
         body: document.body,
+        installGuideBtn: $('installGuideBtn'),
+        installGuide: $('installGuide'),
         themeToggle: $('themeToggle'),
         themeIcon: $('themeIcon'),
         themeLabel: $('themeLabel'),
@@ -954,7 +987,6 @@
       async function fetchCoinPrice(queryInfo) {
         const { raw, symbol } = queryInfo;
 
-        // 1. CoinCap search by name or symbol
         const capSearch = await fetchJson(`https://api.coincap.io/v2/assets?search=${encodeURIComponent(symbol)}&limit=5`);
         if (capSearch && Array.isArray(capSearch.data) && capSearch.data.length > 0) {
           const exactSymbol = capSearch.data.find((a) => (a.symbol || '').toUpperCase() === symbol);
@@ -963,7 +995,6 @@
           if (p > 0) return { price: p, source: 'CoinCap', label: chosen.symbol || symbol };
         }
 
-        // 2. CoinGecko search + simple price lookup
         const cgSearch = await fetchJson(`https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(symbol)}`);
         if (cgSearch && Array.isArray(cgSearch.coins) && cgSearch.coins.length > 0) {
           const exactCoin = cgSearch.coins.find((c) => (c.symbol || '').toUpperCase() === symbol) || cgSearch.coins[0];
@@ -974,13 +1005,11 @@
           }
         }
 
-        // 3. Binance spot USDT pair fallback
         const binData = await fetchJson(`https://api.binance.com/api/v3/ticker/price?symbol=${encodeURIComponent(symbol + 'USDT')}`);
         if (binData && parseFloat(binData.price) > 0) {
           return { price: parseFloat(binData.price), source: 'Binance', label: symbol };
         }
 
-        // 4. Direct slug fallback on CoinCap (in case user typed slug like "solana")
         if (raw !== symbol.toLowerCase()) {
           const capDirect = await fetchJson(`https://api.coincap.io/v2/assets/${encodeURIComponent(raw)}`);
           if (capDirect && capDirect.data && parseFloat(capDirect.data.priceUsd) > 0) {
@@ -1028,6 +1057,15 @@
         saveState();
         calculatePnL(true);
       });
+
+      // === قابلیت جدید: زدن دکمه اینتر برای دریافت قیمت ===
+      elements.pairName.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          elements.fetchPriceBtn.click();
+        }
+      });
+      // ========================================================
 
       function formatSignedNumber(num, decimals = 2) {
         if (!Number.isFinite(num) || Math.abs(num) < Math.pow(10, -decimals) / 2) {
@@ -1112,6 +1150,11 @@
         }
       }
 
+      elements.installGuideBtn.addEventListener('click', () => {
+        const isOpen = elements.installGuide.classList.toggle('open');
+        elements.installGuideBtn.classList.toggle('active-option', isOpen);
+      });
+
       elements.themeToggle.addEventListener('click', () => {
         setTheme(elements.html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
       });
@@ -1168,6 +1211,12 @@
         safeRemove(STORAGE_KEY);
         calculatePnL(true);
       });
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch(() => {});
+        });
+      }
 
       const savedTheme = safeGet(THEME_KEY);
       if (savedTheme === 'dark' || savedTheme === 'light') setTheme(savedTheme);
